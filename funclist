@@ -1,0 +1,7 @@
+_interruptionsBassePriorite: CODE, 24 0 168
+_conversionMagnitude: CODE, 300 0 32
+_main: CODE, 350 0 6
+__initialization: CODE, 356 0 0
+_conversionDirection: CODE, 332 0 18
+_hardwareInitialise: CODE, 196 0 104
+Total: 328
