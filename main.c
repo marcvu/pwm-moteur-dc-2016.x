@@ -24,7 +24,9 @@ typedef enum {
  * @return AVANT ou ARRIERE.
  */
 Direction conversionDirection(unsigned char v) {
-    // À implémenter...
+    if (v<128){
+       return ARRIERE; 
+    }
     return AVANT;
 }
 
@@ -34,8 +36,11 @@ Direction conversionDirection(unsigned char v) {
  * @return Cycle de travail du PWM.
  */
 unsigned char conversionMagnitude(unsigned char v) {
-    // À implémenter...
-    return 0;
+    if (v<128){
+        return 254-2*v;
+    }
+    
+    return 2*v-256;
 }
 
 #ifndef TEST
@@ -44,21 +49,43 @@ unsigned char conversionMagnitude(unsigned char v) {
  * Initialise le hardware.
  */
 static void hardwareInitialise() {
+    //Mise du Fosc à 1MHz par le clk interne
+    OSCCONbits.IRCF=3; // Permet de seter INTosc à 1 MHz
+    OSCCONbits.SCS=2; // Choix sur de l'oscillateur sur Clock MUX
     
     // Prépare Temporisateur 2 pour PWM (compte jusqu'à 255 en 1ms):
-    // À faire...
+    T2CONbits.T2CKPS=0; //Division par 1 de Fosc/4
+    PR2=255; //Période en "pas"
+    T2CONbits.T2OUTPS=9; //Interruption toutes les 10ms
+    PIE1bits.TMR2IE=1; //Autorise les interruptions du Timer 2
+    T2CONbits.TMR2ON=1; //Enclencher le timer 2
     
     // Configure PWM 1 pour émettre un signal de 1KHz:
-    // À faire...
+    CCPTMRS0bits.C1TSEL=0; //Aiguille Timer 2 sur CCP1
+    CCP1CONbits.P1M=0; //Configuration générateur PWM
+    CCP1CONbits.CCP1M=0b1100; //Est-ce nécessaire
+    TRISCbits.RC2=0; //Pin RC2 mise en sortie
+    
+    
+    
 
     // Configure RC0 et RC1 pour gérer la direction du moteur:
-    // À faire...
+    TRISCbits.RC0=0; //Pin RC0 mise en sortie
+    TRISCbits.RC1=0; //Pin RC1 mise en sortie
     
     // Active le module de conversion A/D:
-    // À faire...
+    TRISBbits.RB3=1; //Pin RB3 en entrée
+    ADCON0bits.CHS=0b1001; // active AN9
+    ADCON1bits.PVCFG=0; // Vref+ en interne sur VDD
+    ADCON1bits.NVCFG=0; // Vref- sur Vss (0V)
+    ADCON2bits.ADFM=0; // Justifié à gauche (Adresse H)
+    PIE1bits.ADIE=1; // Active l'interruption "fin de conversion AD"
+    ADCON0bits.ADON=1; // Active l'entrée
 
     // Active les interruptions générales:
-    // À faire...
+    RCONbits.IPEN=1; //Gère les alarmes en low priority
+    INTCONbits.PEIE=1; //autorise les interruptions périphériques
+    INTCONbits.GIE=1; //autorise les interruptions
 }
 
 /**
